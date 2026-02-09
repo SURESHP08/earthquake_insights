@@ -57,7 +57,6 @@ for year in range(start_year, end_year + 1):
                 "nst": p.get("nst"),
                 "net": p.get("net"),
             })
-        # adding a comment to view in github to test the git feature
 
 df = pd.DataFrame(all_records)
 
