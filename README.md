@@ -1,4 +1,4 @@
-# earthquake_insights
+# Earthquake_insights
 
 A utility that downloads recent earthquake event data from the USGS FDSN event API, loads it into a pandas DataFrame, and stores it in a MySQL database for analysis.
 
@@ -79,21 +79,84 @@ python earthquake_trend_analyzer.py
 
 ### 4. Run the Streamlit Dashboard
 
-View and analyze all 30 SQL queries interactively:
+#### Quick Start Command (Windows PowerShell)
 
 ```powershell
 cd "D:\earthquick'\earthquake_insights"
-.\env\Scripts\Activate.ps1
-python -m streamlit run streamlit_dashboard.py
-```
-
-Or in one command (Windows PowerShell):
-
-```powershell
 .\env\Scripts\python.exe -m streamlit run streamlit_dashboard.py
 ```
 
-The dashboard will open in your browser at `http://localhost:8501`
+#### What to Expect
+
+After running the command, you should see:
+```
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://<your-ip>:8501
+```
+
+The dashboard will automatically open in your default browser. If not, manually navigate to:
+- **Local Access:** `http://localhost:8501`
+- **Network Access:** `http://<your-machine-ip>:8501` (for access from other devices)
+
+#### Streamlit Dashboard Features
+
+**Dashboard Interface:**
+- **Left Sidebar:** Interactive dropdown menu with all 30 earthquake analysis queries
+- **Query Selection:** Select any query from the dropdown
+- **Execute Button:** Click "Execute Query" to run the selected query
+- **Results Display:** Query results shown in a formatted table
+- **CSV Export:** Download results as CSV file directly from the dashboard
+
+**30 Available Queries:**
+1. Top 10 Strongest Earthquakes
+2. Top 10 Deepest Earthquakes
+3. Most Recent Earthquakes (Last 30 Days)
+4. Earthquakes by Magnitude Range (5.0-6.0)
+5. Earthquakes by Depth Category (Shallow, Intermediate, Deep)
+6. Average Magnitude by Region
+7. Earthquake Count by Year
+8. Magnitude vs Depth Correlation
+9. Earthquakes in Specific Latitude Range
+10. Earthquakes in Specific Longitude Range
+... and 20 more analytical queries covering magnitude trends, regional analysis, temporal patterns, and seismic activity statistics.
+
+#### Troubleshooting
+
+**Issue: Browser doesn't open automatically**
+- Manually navigate to `http://localhost:8501`
+
+**Issue: "Address already in use" error**
+```powershell
+# Kill the process using port 8501
+netstat -ano | findstr :8501
+taskkill /PID <PID> /F
+```
+
+**Issue: "Query error: MySQL Connection not available"**
+1. Verify MySQL is running: `mysql -u root -p`
+2. Check credentials match your environment variables
+3. Verify database was created: `SHOW DATABASES;`
+4. The dashboard auto-reconnects on the next query attempt
+
+**Issue: Environment variables not set**
+```powershell
+# Set them in PowerShell before running Streamlit:
+$env:MYSQL_USER = "root"
+$env:MYSQL_PASSWORD = "your_password"
+$env:MYSQL_HOST = "localhost"
+$env:MYSQL_DATABASE = "earthquake_db"
+
+# Then run:
+.\env\Scripts\python.exe -m streamlit run streamlit_dashboard.py
+```
+
+**Issue: Slow dashboard response**
+- First query execution loads data from MySQL database
+- Subsequent queries may be faster
+- Large datasets may take 5-10 seconds to execute
+- No caching is used to ensure fresh data on each query
 
 ### 5. Verify in MySQL Workbench
 
