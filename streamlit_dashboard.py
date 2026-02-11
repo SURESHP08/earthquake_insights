@@ -4,7 +4,7 @@ import mysql.connector
 import os
 
 st.set_page_config(page_title="Earthquake Insights - 30 Queries", layout="wide")
-st.title("[QUAKE] Earthquake Analysis - 30 SQL Queries")
+st.title("[USGS] Earthquake Analysis - 30 SQL Queries")
 
 # MySQL connection setup
 @st.cache_resource
