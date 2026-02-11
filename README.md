@@ -4,6 +4,8 @@ A utility that downloads recent earthquake event data from the USGS FDSN event A
 
 ## Contents
 
+- `streamlit_dashboard.py` — **Interactive Streamlit dashboard** that executes all 30 SQL queries directly from the MySQL database and displays results with export options
+
 - `earthquake_trend_analyzer.py` — Main script that:
   - Fetches earthquake events (magnitude ≥ 3) from the last 5 years
   - Creates a pandas DataFrame
@@ -12,11 +14,7 @@ A utility that downloads recent earthquake event data from the USGS FDSN event A
   - Inserts all records into MySQL
   - Verifies the import with statistics
 
-- `earthquake_analysis_30_queries.sql` — Comprehensive SQL queries (30 total) for earthquake analysis across multiple categories
-
-- `run_analysis_queries.py` — Python script to execute all 30 analysis queries and export results to CSV
-
-- `test_mysql_connection.py` — Connection tester to verify MySQL setup before running the main script
+- `earthquake_analysis.sql` — Comprehensive SQL queries (30 total) for earthquake analysis across multiple categories
 
 - `MYSQL_SETUP.md` — Detailed MySQL installation and configuration guide
 
@@ -26,11 +24,19 @@ A utility that downloads recent earthquake event data from the USGS FDSN event A
 - `requests` — for API calls
 - `pandas` — for DataFrame operations
 - `mysql-connector-python` — for MySQL connection
+- `streamlit` — for interactive dashboard
+- `plotly` — for visualizations
 
 Install all packages:
 
 ```powershell
 python -m pip install -r requirements.txt
+```
+
+Or install individually:
+
+```powershell
+pip install streamlit pandas mysql-connector-python requests plotly
 ```
 
 ## Quick Start
@@ -57,7 +63,7 @@ $env:MYSQL_PORT = "3306"
 $env:MYSQL_DATABASE = "earthquake_db"
 ```
 
-### 3. Run the Script
+### 3. Load Data into MySQL
 
 ```powershell
 python earthquake_trend_analyzer.py
@@ -71,7 +77,25 @@ python earthquake_trend_analyzer.py
 - ✓ Insert all records into MySQL
 - ✓ Display verification statistics
 
-### 4. Verify in MySQL Workbench
+### 4. Run the Streamlit Dashboard
+
+View and analyze all 30 SQL queries interactively:
+
+```powershell
+cd "D:\earthquick'\earthquake_insights"
+.\env\Scripts\Activate.ps1
+python -m streamlit run streamlit_dashboard.py
+```
+
+Or in one command (Windows PowerShell):
+
+```powershell
+.\env\Scripts\python.exe -m streamlit run streamlit_dashboard.py
+```
+
+The dashboard will open in your browser at `http://localhost:8501`
+
+### 5. Verify in MySQL Workbench
 
 ```sql
 USE earthquake_db;
@@ -106,63 +130,100 @@ The `earthquakes` table contains these fields:
 
 ## 30 Earthquake Analysis Queries
 
-Run all analyses with:
+All 30 queries are available in the **interactive Streamlit dashboard** (`streamlit_dashboard.py`). Each query result is displayed in an expandable section with a download button to export data as CSV.
+
+### Running the Dashboard
 
 ```powershell
-python run_analysis_queries.py
+python -m streamlit run streamlit_dashboard.py
 ```
 
-Or view the SQL file directly:
-
-```powershell
-cat earthquake_analysis_30_queries.sql
-```
+The dashboard connects directly to your MySQL `earthquake_db` database and executes queries on demand.
 
 ### Query Categories:
 
-**1. Magnitude & Depth Analysis (Queries 1-5)**
-- Top 10 strongest earthquakes
-- Top 10 deepest earthquakes
-- Shallow earthquakes (< 50km) with high magnitude (> 7.5)
-- Average depth by region
-- Average magnitude by magnitude type
+**Magnitude & Depth Analysis (Queries 1-5)**
+- 1. Top 10 strongest earthquakes
+- 2. Top 10 deepest earthquakes
+- 3. Shallow earthquakes (< 50km) with high magnitude (> 7.5)
+- 4. Average depth by region
+- 5. Average magnitude by magnitude type
 
-**2. Time Analysis (Queries 6-10)**
-- Year with most earthquakes
-- Month with highest earthquake count
-- Day of week distribution
-- Hourly distribution
-- Most active reporting network
+**Time Analysis (Queries 6-10)**
+- 6. Year with most earthquakes
+- 7. Month with highest earthquake count
+- 8. Day of week with most earthquakes
+- 9. Count of earthquakes per hour of day
+- 10. Most active reporting network
 
-**3. Event Quality (Queries 14-18)**
-- Reviewed vs automatic earthquakes
-- Earthquake type distribution
-- Data quality metrics (RMS, gap)
-- High station coverage events
+**Event Quality & Status (Queries 14-18)**
+- 14. Reviewed vs automatic earthquakes
+- 15. Count by earthquake type
+- 16. Number of earthquakes by data type
+- 17. Average RMS and gap by region
+- 18. Events with high station coverage (nst > 50)
 
-**4. Tsunamis & Alerts (Queries 19-20)**
-- Tsunamis triggered per year
-- Distribution by alert level
+**Tsunamis & Alerts (Queries 19-20)**
+- 19. Tsunamis triggered per year
+- 20. Count earthquakes by alert level
 
-**5. Seismic Patterns (Queries 21-24)**
-- Top regions by average magnitude
-- Mixed shallow/deep activity in same month
-- Year-over-year growth trends
-- Most seismically active regions
+**Seismic Patterns & Trends (Queries 21-24)**
+- 21. Top 5 countries by average magnitude (last 10 years)
+- 22. Countries with both shallow and deep earthquakes in same month
+- 23. Year-over-year growth rate in total earthquakes
+- 24. Top 3 most seismically active regions (frequency + magnitude)
 
-**6. Depth & Location Analysis (Queries 25-30)**
-- Equatorial region analysis (±5° latitude)
-- Shallow-to-deep earthquake ratios
-- Tsunami magnitude comparison
-- Data reliability assessment
-- Consecutive earthquake pairs
-- Deep-focus earthquakes (> 300km)
+**Depth & Location Analysis (Queries 25-30)**
+- 25. Average depth near equator (±5° latitude)
+- 26. Shallow-to-deep earthquake ratios by country
+- 27. Average magnitude: tsunami vs non-tsunami
+- 28. Lowest reliability events (highest error margins)
+- 29. Consecutive earthquakes within 50km and 1 hour
+- 30. Regions with highest frequency of deep-focus earthquakes (> 300km)
 
-**Bonus:** Overall statistics, monthly trends, magnitude distribution
+### Accessing Individual Queries
+
+To run a specific query directly in MySQL:
+
+```sql
+-- Example: Top 10 strongest earthquakes
+SELECT id, place, magnitude, time, depth_km 
+FROM earthquakes 
+ORDER BY magnitude DESC 
+LIMIT 10;
+```
+
+See `earthquake_analysis.sql` for all 30 SQL queries.
 
 ## Troubleshooting
 
-### Connection Issues
+### Streamlit Dashboard Issues
+
+**Error: ModuleNotFoundError: No module named 'streamlit'**
+```powershell
+# Make sure to use the project's virtual environment
+.\env\Scripts\python.exe -m pip install streamlit plotly mysql-connector-python
+```
+
+**Dashboard won't open in browser**
+- The Streamlit server is running, but the browser didn't open automatically
+- Copy the Local URL printed in the terminal (e.g., http://localhost:8501) and paste it into your browser manually
+- Alternatively, run with explicit host/port:
+  ```powershell
+  .\env\Scripts\python.exe -m streamlit run streamlit_dashboard.py --server.port 8502
+  ```
+
+**Database connection fails in dashboard**
+- Ensure MySQL is running and your environment variables are set:
+  ```powershell
+  $env:MYSQL_HOST = "localhost"
+  $env:MYSQL_USER = "root"
+  $env:MYSQL_PASSWORD = "your_password"
+  $env:MYSQL_DATABASE = "earthquake_db"
+  ```
+- Or edit the dashboard code to hardcode credentials (not recommended for production)
+
+### MySQL Connection Issues
 
 **Error: Access denied (wrong username/password)**
 ```powershell
@@ -183,18 +244,18 @@ Get-Service | grep MySQL
 net start MySQL80
 ```
 
+### Data Loading Issues
+
 **Error: Syntax or Unicode encoding**
 - Already handled: the script uses ASCII-safe text for messages
 - Run with: `python earthquake_trend_analyzer.py`
 
-### Test Connection First
-
-Before running the main script, test your setup:
+**Test your MySQL setup before loading data:**
 
 ```powershell
 $env:MYSQL_USER = "root"
 $env:MYSQL_PASSWORD = "your_password"
-python test_mysql_connection.py
+python -c "import mysql.connector; conn = mysql.connector.connect(host='localhost', user=os.getenv('MYSQL_USER'), password=os.getenv('MYSQL_PASSWORD')); print('OK')"
 ```
 
 ## Configuration
@@ -243,17 +304,27 @@ df.to_csv('earthquakes_export.csv', index=False)
 
 ## Notes
 
-- **API Rate Limiting:** Queries are paginated by month to avoid hitting API limits
-- **Performance:** First run may take 5-10 minutes to fetch 5 years of data
-- **Storage:** Typically ~5,000-10,000 records per year for magnitude ≥ 3 events
-- **Updates:** Run the script multiple times; duplicate IDs will update existing records
+- **Streamlit Dashboard:** Interactive interface for exploring all 30 analysis queries with live results and CSV export
+- **API Rate Limiting:** `earthquake_trend_analyzer.py` paginates queries by month to avoid hitting USGS API limits
+- **Performance:** First data load may take 5-10 minutes to fetch 5 years of data from USGS
+- **Data Volume:** Typically ~5,000-10,000 records per year for magnitude ≥ 3 events
+- **Updates:** Run `earthquake_trend_analyzer.py` multiple times; duplicate IDs will update existing records with latest data
+- **Query Performance:** Streamlit dashboard caches MySQL connections for optimal performance
 
 ## Data Source
 
 All earthquake data comes from the [USGS Earthquake Hazards Program](https://earthquake.usgs.gov/fdsnws/event/1/).
 
+## Workflow Summary
+
+1. **Data Ingestion:** `earthquake_trend_analyzer.py` fetches data from USGS API → MySQL
+2. **Interactive Analysis:** `streamlit_dashboard.py` displays all 30 SQL queries with results
+3. **SQL Queries:** `earthquake_analysis.sql` contains all analysis queries
+4. **Export:** Download results as CSV directly from the dashboard
+
 ## Additional Resources
 
-- See `MYSQL_SETUP.md` for detailed MySQL installation steps
-- See `earthquake_analysis_30_queries.sql` for all SQL query details
-- See `requirements.txt` for Python package versions
+- `streamlit_dashboard.py` — Run the interactive dashboard
+- `earthquake_analysis.sql` — View all 30 SQL queries
+- `earthquake_trend_analyzer.py` — Load latest earthquake data from USGS
+- `README.md` — This file with setup instructions
