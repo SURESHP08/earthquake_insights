@@ -303,22 +303,37 @@ LIMIT 15;
     },
 }
 
-# Display queries by category
-for category, queries_dict in queries.items():
-    st.header(category)
-    for query_name, query in queries_dict.items():
-        with st.expander(query_name):
-            df_result = run_query(conn, query)
-            if not df_result.empty:
-                st.dataframe(df_result, use_container_width=True)
-                csv = df_result.to_csv(index=False)
-                st.download_button(
-                    f"Download {query_name.split('.')[0]}",
-                    csv,
-                    file_name=f"{query_name.split('.')[0].replace(' ', '_')}.csv"
-                )
-            else:
-                st.warning("No results for this query")
+# Sidebar dropdowns for query selection
+st.sidebar.header("Query Selection")
+category = st.sidebar.selectbox("Select Category:", list(queries.keys()))
+query_names = list(queries[category].keys())
+selected_query = st.sidebar.selectbox("Select Query:", query_names)
+
+# Display selected query
+st.header(f"{category}")
+st.subheader(selected_query)
+
+query = queries[category][selected_query]
+st.code(query, language="sql")
+
+# Execute and display results
+if st.sidebar.button("Execute Query", type="primary"):
+    with st.spinner("Executing query..."):
+        df_result = run_query(conn, query)
+        if not df_result.empty:
+            st.success(f"✓ Query executed successfully ({len(df_result)} rows)")
+            st.dataframe(df_result, use_container_width=True)
+            
+            # Download button
+            csv = df_result.to_csv(index=False)
+            st.download_button(
+                label=f"📥 Download as CSV",
+                data=csv,
+                file_name=f"{selected_query.split('.')[0].replace(' ', '_')}.csv",
+                mime="text/csv"
+            )
+        else:
+            st.warning("No results for this query")
 
 st.divider()
-st.success("Dashboard complete. All 30 queries executed from MySQL earthquake_db database.")
+st.info(f"Total Queries Available: {sum(len(v) for v in queries.values())} | Connected to: earthquake_db")
