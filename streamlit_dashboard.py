@@ -8,26 +8,67 @@ st.set_page_config(page_title="Earthquake Insights - 30 Queries", layout="wide")
 st.title("[USGS] Earthquake Analysis - 30 SQL Queries")
 
 # MySQL connection setup with reconnection logic
-def get_connection():
-    """Establish MySQL connection with error handling."""
+def init_connection():
+    """Initialize a MySQL connection using Streamlit secrets (preferred).
+
+    Expects `st.secrets["mysql"]` to contain: host, user, password, database, port (optional).
+    """
+    mysql_cfg = st.secrets.get("mysql", {})
+    host = mysql_cfg.get("host")
+    user = mysql_cfg.get("user")
+    password = mysql_cfg.get("password")
+    database = mysql_cfg.get("database")
+    port = mysql_cfg.get("port")
     try:
+        port = int(port) if port is not None else None
+    except Exception:
+        port = None
+
+    return mysql.connector.connect(
+        host=host,
+        user=user,
+        password=password,
+        database=database,
+        port=port,
+        autocommit=True,
+        connection_timeout=30
+    )
+
+
+def get_connection():
+    """Establish MySQL connection with error handling.
+
+    Priority: use `st.secrets['mysql']` when available, otherwise fall back to environment variables.
+    """
+    try:
+        # Prefer Streamlit secrets
+        if "mysql" in st.secrets:
+            return init_connection()
+
+        # Fallback to environment variables
         host = os.getenv("MYSQL_HOST", "localhost")
         user = os.getenv("MYSQL_USER", "root")
         password = os.getenv("MYSQL_PASSWORD", "My$QL102511")
         database = os.getenv("MYSQL_DATABASE", "earthquake_db")
-        
+        port_env = os.getenv("MYSQL_PORT")
+        try:
+            port = int(port_env) if port_env else None
+        except Exception:
+            port = None
+
         conn = mysql.connector.connect(
             host=host,
             user=user,
             password=password,
             database=database,
+            port=port,
             autocommit=True,
             connection_timeout=30
         )
         return conn
     except Error as e:
         st.error(f"🔴 Database connection failed: {e}\n\nPlease ensure:")
-        st.error("1. MySQL is running\n2. Environment variables are set correctly:\n   - MYSQL_HOST\n   - MYSQL_USER\n   - MYSQL_PASSWORD\n   - MYSQL_DATABASE")
+        st.error("1. MySQL is running\n2. Environment variables or Streamlit secrets are set correctly:\n   - MYSQL_HOST or secrets.mysql.host\n   - MYSQL_USER or secrets.mysql.user\n   - MYSQL_PASSWORD or secrets.mysql.password\n   - MYSQL_DATABASE or secrets.mysql.database")
         return None
 
 def is_connection_alive(conn):
